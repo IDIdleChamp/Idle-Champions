@@ -115,7 +115,7 @@ class GameObjectStructure
         else if(this.ValueType == "HashSet")
         {
             ; TODO: Verify hashset has same offsets as lists
-            offset := this.CalculateOffset(key)
+            offset := this.CalculateOffset(key) + 0
             collectionEntriesOffset := this.BasePtr.Is64Bit ? 0x10 : 0x8
             this.UpdateCollectionOffsets(key, collectionEntriesOffset, offset)
         }
@@ -258,7 +258,7 @@ class GameObjectStructure
     {
         for k,v in currentObj
         {
-            if(IsObject(v) AND ObjGetBase(v).__Class == "GameObjectStructure" and v.FullOffsets != "")
+            if(IsObject(v) AND ObjGetBase(v).__Class == "GameObjectStructure" AND v.FullOffsets != "" AND k != "BasePtr")
             {
                 v.FullOffsets.InsertAt(insertLoc, offset*)
                 v.UpdateChildrenWithFullOffsets(v, insertLoc, offset)
@@ -274,14 +274,14 @@ class GameObjectStructure
             valueType := this.ValueType
         ; DEBUG: Uncomment following line to enable a readable offset string when debugging thisStructure Offsets
         ; val := ArrFnc.GetHexFormattedArrayString(this.FullOffsets)
-        baseAddress := this.BasePtr.BaseAddress
+        baseAddress := this.BasePtr.BaseAddress ? this.BasePtr.BaseAddress + 0 : this.BasePtr.BaseAddress ; do math on non-null non-zero value to ensure number instead of string. Prevents memory leaks.
         if(valueType == "UTF-16") ; take offsets of string and add offset to "value" of string based on 64/32bit
         {
             offsets := this.FullOffsets.Clone()
             offsets.Push(this.BasePtr.Is64Bit ? 0x14 : 0xC)
             var := _MemoryManager.instance.readstring(baseAddress, bytes := 0, valueType, offsets*)
         }
-        else if (valueType == "List" or valueType == "Dict" or valueType == "HashSet") ; custom ValueTypes not in classMemory.ahk
+        else if (valueType == "List" OR valueType == "Dict" OR valueType == "HashSet") ; custom ValueTypes not in classMemory.ahk
         {
             var := _MemoryManager.instance.read(baseAddress, "Int", (this.GetOffsets())*)
         }
